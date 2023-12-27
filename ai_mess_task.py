@@ -10,24 +10,23 @@ import schedule
 from conf import bot_token, db_path, start_times
 from handlers.db import get_sendto, mess_reset, get_admins_list
 
-CHANNEL_ID = get_sendto()[0]
 
-
-def send_photo(file_path, caption):
+def send_photo(file_path, caption, send_to):
     with open(file_path, 'rb') as img_file:
         img = {'photo': ('_', img_file, 'image/jpeg')}
-        url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={CHANNEL_ID}&caption={caption}'
+        url = f'https://api.telegram.org/bot{bot_token}/sendPhoto?chat_id={send_to}&caption={caption}'
         response = requests.post(url, files=img)
         return response.text
 
 
-def send_text(message_text, send_to=CHANNEL_ID):
+def send_text(message_text, send_to):
     url = f'https://api.telegram.org/bot{bot_token}/sendMessage'
     response = requests.post(url, json={'chat_id': send_to, 'parse_mode': 'html', 'text': message_text})
     return response.text
 
 
 def send_random_message():
+    channel_id = get_sendto()[0]
     conn = sqlite3.connect(db_path())
     c = conn.cursor()
     c.execute('SELECT * FROM messages WHERE last_send is NULL')
@@ -43,9 +42,9 @@ def send_random_message():
     message_id, text, last_sent = message_db
     img_mess = open_random_image(message_id)
     if img_mess:
-        send_photo(file_path=os.path.join(os.getcwd(), img_mess), caption=text)
+        send_photo(file_path=os.path.join(os.getcwd(), img_mess), caption=text, send_to=channel_id)
     else:
-        send_text(text)
+        send_text(text, send_to=channel_id)
     c.execute('UPDATE messages SET last_send=? WHERE ids=?',
               (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f'), message_id))
     conn.commit()

@@ -6,6 +6,7 @@ from aiogram.utils.markdown import hbold
 
 from aiogram.filters.command import Command, CommandStart
 
+from conf import start_times
 from handlers.db import check_last_sent_status, mess_reset, get_admins_list, remove_admin_list, add_admin_list, \
     get_sendto, add_sendto, remove_sendto
 from handlers.service import auth_admin
@@ -134,7 +135,13 @@ async def command_control(message: Message):
         [types.InlineKeyboardButton(text="Edit which chat to send to", callback_data=f'sendto_main')],
     ]
     keyboard = InlineKeyboardMarkup(inline_keyboard=kb)
-    return await message.answer(f"Control bots settings", reply_markup=keyboard)
+    sendto = get_sendto()
+    if sendto:
+        send_to_text = sendto[0]
+    else:
+        send_to_text = '-'
+    return await message.answer(f"Control bots settings\nStart times: {start_times}\nSent to: {send_to_text}",
+                                reply_markup=keyboard)
 
 
 @router.callback_query(lambda c: c.data == 'control_admins')

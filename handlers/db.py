@@ -157,8 +157,11 @@ def get_sendto():
         conn = sqlite3.connect(db_path())
         c = conn.cursor()
         send_to = c.execute(f'SELECT value, description FROM settings WHERE name = "send_to"')
+
         conn.commit()
         send_to = send_to.fetchone()
+        if not send_to:
+            return False
         conn.close()
         return send_to
     except sqlite3.OperationalError as err:
